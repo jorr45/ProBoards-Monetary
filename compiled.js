@@ -940,7 +940,7 @@ pixeldepth.monetary = monetary = (function(){
     	 */
 
     	is_allowed_to_edit_money: function(){
-    		if(!this.settings.staff_edit_money || !yootil.user.logged_in() || !yootil.user.is_staff()){
+    		if(!this.settings.staff_edit_money || !yootil.user.logged_in()){
     			return false;
     		}
 
