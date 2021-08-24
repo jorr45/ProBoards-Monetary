@@ -860,7 +860,7 @@ money.bank = (function(){
             }
 
             if (type >= 9){
-                trans_type = "DONATE TO " + type-8;
+                trans_type = "DONATE TO " + (type-8);
             }
 
 			trans_html += '<tr class="bank-transaction-list-row">';

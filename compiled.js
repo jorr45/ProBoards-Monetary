@@ -1421,9 +1421,11 @@ pixeldepth.monetary = monetary = (function(){
     		var user_donations_received = this.data(this.params.user_id).get.total_received_donations(true);
 
     		var edit_image = (this.settings.show_edit_money_image)? (" <img class='money-edit-image' src='" + this.images.edit_money + "' title='Edit' />") : "";
+            var bank_image = (this.settings.show_edit_money_image)? (" <a href='?bank'><img class='other-bank-view-image' src='" + this.images.bank + "' title='Transactions' /></a>") : "";
 
     		if(!this.is_allowed_to_edit_money() || (this.params.user_id == yootil.user.id() && yootil.user.id() != 1)){
     			edit_image = "";
+                bank_image = "";
     		}
 
     		var money_symbol = (this.settings.show_money_symbol_profile)? this.settings.money_symbol : "";
@@ -1489,7 +1491,7 @@ pixeldepth.monetary = monetary = (function(){
     					if(show_bank_balance){
     						var bank_td = this.bind_edit_dialog("<td class=\"pd_bank_money_" + this.params.user_id + "\"><span class=\"pd_bank_money_symbol\">" + money_symbol + "</span><span class=\"pd_bank_amount_" + this.params.user_id + "\">" + yootil.html_encode(user_bank_money) + "</span>" + edit_image + "</td>", this.params.user_id, true);
 
-    						$("<tr/>").html("<td>" + bank_text + "</td>").append(bank_td).insertAfter(row);
+    						$("<tr/>").html("<td>" + bank_text + bank_image + "</td>").append(bank_td).insertAfter(row);
     					}
 
     					var money_td = this.bind_edit_dialog("<td class=\"pd_money_" + this.params.user_id + "\"><span class=\"pd_money_symbol\">" + money_symbol + "</span><span class=\"pd_money_amount_" + this.params.user_id + "\">" + yootil.html_encode(user_money) + "</span>" + edit_image + "</td>", this.params.user_id, false);
@@ -1636,12 +1638,6 @@ pixeldepth.monetary = monetary = (function(){
 
     };
 
-    /**
-     * @class monetary.bank
-     * @static
-     *
-     * Allows members to store money in the bank, deposit, withdraw, and earn interest.
-     */
      /**
       * @class monetary.bank
       * @static
@@ -2504,7 +2500,7 @@ pixeldepth.monetary = monetary = (function(){
                  }
 
                  if (type >= 9){
-                     trans_type = "DONATE TO " + type-8;
+                     trans_type = "DONATE TO " + (type-8);
                  }
 
      			trans_html += '<tr class="bank-transaction-list-row">';
