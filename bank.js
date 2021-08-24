@@ -113,13 +113,116 @@ money.bank = (function(){
 					money.show_default();
 				}
 			}
+            else if (yootil.location.profile_home() && money.settings.staff_edit_money && money.is_allowed_to_edit_money()){
+                this.start_other_bank();
+            }
 		},
 
 		/**
 		 * Creates the bank page and builds the HTML to be shown.
 		 */
 
-		start: function(){
+		start_other_bank: function(){
+			var self = this;
+
+			var html = "";
+
+			var trans_html = "";
+
+			trans_html += '<table id="bank-transaction-list">';
+			var transactions = this.get_transactions(money.params.user_id);
+
+			if(!transactions.length){
+				trans_html += '<tr class="bank-transaction-list-row"><td><em>There are no ' + this.settings.text.transactions.toLowerCase() + ' to view.</td></tr>';
+			} else {
+				trans_html += this.get_transaction_html_headers();
+
+				var counter = 0;
+
+				for(var t = 0, l = transactions.length; t < l; t ++){
+					var type = "";
+					var balance = transactions[t][4];
+
+					switch(transactions[t][0]){
+
+						case 1 :
+							type = this.settings.text.types.DEPOSIT;
+							break;
+
+						case 2 :
+							type = this.settings.text.types.WITHDRAW;
+							break;
+
+						case 3 :
+							type = this.settings.text.types.INTEREST;
+							break;
+
+						case 4 :
+							type = this.settings.text.types.STAFFEDIT;
+							break;
+
+						case 5 :
+							type = this.settings.text.types.WAGES;
+							break;
+
+						case 6 :
+							type = this.settings.text.types.RANKUP;
+							break;
+
+						case 7 :
+							type = this.settings.text.types.STAFFWAGES;
+							break;
+
+						case 8 :
+							type = this.settings.text.types.GIFTMONEY;
+							break;
+
+					}
+
+                    if (transactions[t][0] < 0) {
+                        type = "RECEIVE FROM " + transactions[t][0]*-1;
+                    }
+
+                    if (transactions[t][0] >= 9){
+                        type = "DONATE TO " + (transactions[t][0]-8);
+                    }
+
+					var in_amount = (transactions[t][1] > 0)? transactions[t][1] : "--";
+					var out_amount = (transactions[t][2] > 0)? transactions[t][2] : "--";
+					var date_str = this.format_transaction_date(transactions[t][3]);
+
+					trans_html += '<tr class="bank-transaction-list-row">';
+					trans_html += '<td>' + date_str + '</td>';
+					trans_html += '<td>' + type + '</td>';
+					trans_html += '<td>' + yootil.html_encode(yootil.number_format(money.format(in_amount, true))) + '</td>';
+					trans_html += '<td>' + yootil.html_encode(yootil.number_format(money.format(out_amount, true))) + '</td>';
+					trans_html += '<td>' + yootil.html_encode(yootil.number_format(money.format(balance, true))) + '</td>';
+					trans_html += '</tr>';
+
+					counter ++;
+				}
+			}
+
+			trans_html += '</table>';
+
+			var self = this;
+			var trans = yootil.create.container("Recent " + this.settings.text.transactions + " <span id='bank-clear-transactions'>(Clear)</span>", trans_html);
+
+			trans.show().appendTo("#content");
+
+			trans.find("#bank-clear-transactions").click(function(){
+				var no_transactions = $('<tr class="bank-transaction-list-row"><td><em>There are no ' + self.settings.text.transactions.toLowerCase() + ' to view.</td></tr>');
+				var list = $("#bank-transaction-list");
+
+				list.find("tr").remove();
+				list.append(no_transactions);
+				self.clear_transactions();
+			});
+		},
+
+
+
+        start: function(){
 			var self = this;
 
 			yootil.create.page("?bank", this.settings.text.bank);
@@ -332,6 +435,14 @@ money.bank = (function(){
 							break;
 
 					}
+
+                    if (transactions[t][0] < 0) {
+                        type = "RECEIVE FROM " + transactions[t][0]*-1;
+                    }
+
+                    if (transactions[t][0] >= 9){
+                        type = "DONATE TO " + (transactions[t][0]-8);
+                    }
 
 					var in_amount = (transactions[t][1] > 0)? transactions[t][1] : "--";
 					var out_amount = (transactions[t][2] > 0)? transactions[t][2] : "--";
@@ -660,7 +771,9 @@ money.bank = (function(){
 			if(typeof force_previous_balance != "number"){
 				if(!previous_balance){
 					total_balance = parseFloat(money.data(user_id).get.bank());
-				} else {
+				} else if (typeof force_previous_balance == "string"){
+                    // do nothing
+                } else {
 					total_balance += (type == 2)? - out_amount : in_amount;
 				}
 			}
@@ -671,7 +784,7 @@ money.bank = (function(){
 
 			this.add_new_transaction_row(type, in_amount, out_amount, now, total_balance);
 
-			var new_transactions_list = current_transactions.slice(0, 5);
+			var new_transactions_list = current_transactions.slice(0, 50);
 
 			if(type == 4){
 				return new_transactions_list;
@@ -741,6 +854,14 @@ money.bank = (function(){
 					break;
 
 			}
+
+            if (type < 0) {
+                trans_type = "RECEIVE FROM " + type*-1;
+            }
+
+            if (type >= 9){
+                trans_type = "DONATE TO " + type-8;
+            }
 
 			trans_html += '<tr class="bank-transaction-list-row">';
 			trans_html += '<td>' + yootil.html_encode(date_str) + '</td>';
