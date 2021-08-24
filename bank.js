@@ -114,7 +114,7 @@ money.bank = (function(){
 				}
 			}
             else if (yootil.location.profile_home() && money.settings.staff_edit_money && money.is_allowed_to_edit_money()){
-                this.start_other_bank();
+                this.show_transaction_list();
             }
 		},
 
@@ -122,7 +122,7 @@ money.bank = (function(){
 		 * Creates the bank page and builds the HTML to be shown.
 		 */
 
-		start_other_bank: function(){
+		show_transaction_list: function(){
 			var self = this;
 
 			var html = "";
@@ -383,98 +383,7 @@ money.bank = (function(){
 
 			container.show().appendTo("#content").find("div.content");
 
-			var trans_html = "";
-
-			trans_html += '<table id="bank-transaction-list">';
-
-			var transactions = this.get_transactions();
-
-			if(!transactions.length){
-				trans_html += '<tr class="bank-transaction-list-row"><td><em>There are no ' + this.settings.text.transactions.toLowerCase() + ' to view.</td></tr>';
-			} else {
-				trans_html += this.get_transaction_html_headers();
-
-				var counter = 0;
-
-				for(var t = 0, l = transactions.length; t < l; t ++){
-					var type = "";
-					var balance = transactions[t][4];
-
-					switch(transactions[t][0]){
-
-						case 1 :
-							type = this.settings.text.types.DEPOSIT;
-							break;
-
-						case 2 :
-							type = this.settings.text.types.WITHDRAW;
-							break;
-
-						case 3 :
-							type = this.settings.text.types.INTEREST;
-							break;
-
-						case 4 :
-							type = this.settings.text.types.STAFFEDIT;
-							break;
-
-						case 5 :
-							type = this.settings.text.types.WAGES;
-							break;
-
-						case 6 :
-							type = this.settings.text.types.RANKUP;
-							break;
-
-						case 7 :
-							type = this.settings.text.types.STAFFWAGES;
-							break;
-
-						case 8 :
-							type = this.settings.text.types.GIFTMONEY;
-							break;
-
-					}
-
-                    if (transactions[t][0] < 0) {
-                        type = "RECEIVE FROM " + transactions[t][0]*-1;
-                    }
-
-                    if (transactions[t][0] >= 9){
-                        type = "DONATE TO " + (transactions[t][0]-8);
-                    }
-
-					var in_amount = (transactions[t][1] > 0)? transactions[t][1] : "--";
-					var out_amount = (transactions[t][2] > 0)? transactions[t][2] : "--";
-					var date_str = this.format_transaction_date(transactions[t][3]);
-
-					trans_html += '<tr class="bank-transaction-list-row">';
-					trans_html += '<td>' + date_str + '</td>';
-					trans_html += '<td>' + type + '</td>';
-					trans_html += '<td>' + yootil.html_encode(yootil.number_format(money.format(in_amount, true))) + '</td>';
-					trans_html += '<td>' + yootil.html_encode(yootil.number_format(money.format(out_amount, true))) + '</td>';
-					trans_html += '<td>' + yootil.html_encode(yootil.number_format(money.format(balance, true))) + '</td>';
-					trans_html += '</tr>';
-
-					counter ++;
-				}
-			}
-
-			trans_html += '</table>';
-
-			var self = this;
-			var trans = yootil.create.container("Recent " + this.settings.text.transactions + " <span id='bank-clear-transactions'>(Clear)</span>", trans_html);
-
-			trans.show().appendTo("#content");
-
-			trans.find("#bank-clear-transactions").click(function(){
-				var no_transactions = $('<tr class="bank-transaction-list-row"><td><em>There are no ' + self.settings.text.transactions.toLowerCase() + ' to view.</td></tr>');
-				var list = $("#bank-transaction-list");
-
-				list.find("tr").remove();
-				list.append(no_transactions);
-				self.clear_transactions();
-			});
+            self.show_transaction_list();
 		},
 
 		/**
