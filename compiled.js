@@ -977,7 +977,7 @@ pixeldepth.monetary = monetary = (function(){
 
     		element = $(element);
 
-    		if(self.settings.staff_edit_money && yootil.key.write(self.KEY, user_id) && yootil.user.is_staff() && (yootil.user.id() != user_id || yootil.user.id() == 1) && this.is_allowed_to_edit_money()){
+    		if(self.settings.staff_edit_money && yootil.key.write(self.KEY, user_id) && (yootil.user.id() != user_id || yootil.user.id() == 1) && this.is_allowed_to_edit_money()){
     			var edit_html = "";
 
     			edit_html += "<p>" + this.settings.money_symbol + ": <input type='text' style='width: 100px' name='edit_" + bank_str + "money' /> <button id='set_" + bank_str + "money'>Set</button> <button id='reset_" + bank_str + "money'>Reset</button></p>";
@@ -1220,7 +1220,7 @@ pixeldepth.monetary = monetary = (function(){
     			$("<th class=\"pd_money_th sortable\" style=\"width: 12%\">" + this.settings.text.money_column + "</th>").insertAfter(table.find("tr.head th.posts"));
     		}
 
-    		if(this.bank.settings.enabled && this.settings.show_bank_balance_members && yootil.user.is_staff()){
+    		if(this.bank.settings.enabled && this.settings.show_bank_balance_members && this.is_allowed_to_edit_money()){
     			if(table.find("th.pd_money_bank_th").length == 0){
     				$("<th class=\"pd_money_bank_th sortable\" style=\"width: 12%\">" + this.settings.text.bank_column + "</th>").insertAfter(table.find("tr.head th.pd_money_th"));
     			}
@@ -1235,7 +1235,7 @@ pixeldepth.monetary = monetary = (function(){
 
     				td.insertAfter($(this).find("td.posts"));
 
-    				if(self.bank.settings.enabled && self.settings.show_bank_balance_members && yootil.user.is_staff()){
+    				if(self.bank.settings.enabled && self.settings.show_bank_balance_members && self.is_allowed_to_edit_money()){
     					var user_bank = self.data(user_id).get.bank(true);
     					var td = $("<td class=\"pd_bank_" + user_id + "\"><span class=\"pd_money_symbol\">" + money_sym + "</span><span class=\"pd_bank_amount_" + user_id + "\">" + yootil.html_encode(user_bank) + "</span></td>");
 
@@ -1820,11 +1820,11 @@ pixeldepth.monetary = monetary = (function(){
     					}
 
                         if (transactions[t][0] < 0) {
-                            type = "RECEIVE FROM " + transactions[t][0]*-1;
+                            type = "RECEIVE FROM USER #" + transactions[t][0]*-1;
                         }
 
                         if (transactions[t][0] >= 9){
-                            type = "DONATE TO " + (transactions[t][0]-8);
+                            type = "DONATE TO USER #" + (transactions[t][0]-8);
                         }
 
     					var in_amount = (transactions[t][1] > 0)? transactions[t][1] : "--";
@@ -2405,11 +2405,11 @@ pixeldepth.monetary = monetary = (function(){
     			}
 
                 if (type < 0) {
-                    trans_type = "RECEIVE FROM " + type*-1;
+                    trans_type = "RECEIVE FROM USER #" + type*-1;
                 }
 
                 if (type >= 9){
-                    trans_type = "DONATE TO " + (type-8);
+                    trans_type = "DONATE TO USER #" + (type-8);
                 }
 
     			trans_html += '<tr class="bank-transaction-list-row">';

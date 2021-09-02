@@ -180,11 +180,11 @@ money.bank = (function(){
 					}
 
                     if (transactions[t][0] < 0) {
-                        type = "RECEIVE FROM " + transactions[t][0]*-1;
+                        type = "RECEIVE FROM USER #" + transactions[t][0]*-1;
                     }
 
                     if (transactions[t][0] >= 9){
-                        type = "DONATE TO " + (transactions[t][0]-8);
+                        type = "DONATE TO USER #" + (transactions[t][0]-8);
                     }
 
 					var in_amount = (transactions[t][1] > 0)? transactions[t][1] : "--";
@@ -765,11 +765,11 @@ money.bank = (function(){
 			}
 
             if (type < 0) {
-                trans_type = "RECEIVE FROM " + type*-1;
+                trans_type = "RECEIVE FROM USER #" + type*-1;
             }
 
             if (type >= 9){
-                trans_type = "DONATE TO " + (type-8);
+                trans_type = "DONATE TO USER #" + (type-8);
             }
 
 			trans_html += '<tr class="bank-transaction-list-row">';
