@@ -1744,7 +1744,7 @@ pixeldepth.monetary = monetary = (function(){
     				}
     			}
 
-    			if(yootil.location.home() && location.href.match(/\/\?bank\/?/i) ){
+    			if(yootil.location.home() && location.href.match(/\/\?bank\/?/i)){
     				if(this.settings.enabled){
     					this.start();
     					money.can_show_default = false;
@@ -1752,7 +1752,10 @@ pixeldepth.monetary = monetary = (function(){
     					money.show_default();
     				}
     			}
-                else if (yootil.location.profile_home() && location.href.match(/\/\?bank\/?/i) && money.settings.staff_edit_money && money.is_allowed_to_edit_money()) {
+                else if (yootil.location.profile_home()  && location.href.match(/\?bank\/?/i) && money.settings.staff_edit_money && money.is_allowed_to_edit_money()){
+                    var id = money.params.user_id;
+                    yootil.create.page(new RegExp("\\/user\\/" + id + "\\bank"), "View Transactions");
+                    yootil.create.nav_branch("/user/" + id + "?bank", "View Transactions");
                     this.show_transaction_list();
                 }
     		},
@@ -1825,6 +1828,7 @@ pixeldepth.monetary = monetary = (function(){
                                     }
                                 }
                                 break;
+
     					}
 
     					var in_amount = (transactions[t][1] > 0)? transactions[t][1] : "--";
@@ -1846,9 +1850,18 @@ pixeldepth.monetary = monetary = (function(){
     			trans_html += '</table>';
 
     			var self = this;
-    			var trans = yootil.create.container("Recent " + this.settings.text.transactions, trans_html);
+    			var trans = yootil.create.container("Recent " + this.settings.text.transactions + " <span id='bank-clear-transactions'>(Clear)</span>", trans_html);
 
     			trans.show().appendTo("#content");
+
+    			trans.find("#bank-clear-transactions").click(function(){
+    				var no_transactions = $('<tr class="bank-transaction-list-row"><td><em>There are no ' + self.settings.text.transactions.toLowerCase() + ' to view.</td></tr>');
+    				var list = $("#bank-transaction-list");
+
+    				list.find("tr").remove();
+    				list.append(no_transactions);
+    				self.clear_transactions();
+    			});
     		},
 
 
@@ -2392,7 +2405,16 @@ pixeldepth.monetary = monetary = (function(){
     				case 8 :
     					type = this.settings.text.types.GIFTMONEY;
     					break;
+
     			}
+
+                if (type >= 9){
+                    if (type % 5 == 0) {
+                        trans_type = "RECEIVE FROM USER #" + (type - 5)/5;
+                    } else if (type % 5 == 1){
+                        trans_type = "DONATE TO USER #" + (type - 1 - 5)/5;
+                    }
+                }
 
     			trans_html += '<tr class="bank-transaction-list-row">';
     			trans_html += '<td>' + yootil.html_encode(date_str) + '</td>';
