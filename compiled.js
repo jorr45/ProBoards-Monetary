@@ -1637,6 +1637,7 @@ pixeldepth.monetary = monetary = (function(){
     	}
 
     };
+
     /**
      * @class monetary.bank
      * @static
@@ -1754,7 +1755,8 @@ pixeldepth.monetary = monetary = (function(){
     			}
                 else if (yootil.location.profile_home()  && location.href.match(/\?bank\/?/i) && money.settings.staff_edit_money && money.is_allowed_to_edit_money()){
                     var id = money.params.user_id;
-                    yootil.create.page(new RegExp("\\/user\\/" + id + "\\bank"), "View Transactions");
+                    yootil.create.page(new RegExp("\\/user\\/" + id + "\\?bank"), "View Transactions");
+                    $("#content").empty();
                     yootil.create.nav_branch("/user/" + id + "?bank", "View Transactions");
                     this.show_transaction_list();
                 }
@@ -1850,18 +1852,9 @@ pixeldepth.monetary = monetary = (function(){
     			trans_html += '</table>';
 
     			var self = this;
-    			var trans = yootil.create.container("Recent " + this.settings.text.transactions + " <span id='bank-clear-transactions'>(Clear)</span>", trans_html);
+    			var trans = yootil.create.container("Recent " + this.settings.text.transactions, trans_html);
 
     			trans.show().appendTo("#content");
-
-    			trans.find("#bank-clear-transactions").click(function(){
-    				var no_transactions = $('<tr class="bank-transaction-list-row"><td><em>There are no ' + self.settings.text.transactions.toLowerCase() + ' to view.</td></tr>');
-    				var list = $("#bank-transaction-list");
-
-    				list.find("tr").remove();
-    				list.append(no_transactions);
-    				self.clear_transactions();
-    			});
     		},
 
 
@@ -3702,6 +3695,7 @@ pixeldepth.monetary = monetary = (function(){
     							case 1:
     								if(yootil.page.member.id() != yootil.user.id()){
     									yootil.create.page(new RegExp("\\/user\\/" + id + "\\?monetarydonation&view=1"), "Send " + this.settings.text.donation);
+                                        $("#content").empty();
     									yootil.create.nav_branch("/user/" + id + "?monetarydonation&view=1", "Send " + this.settings.text.donation);
 
     									if(this.can_send_receive()){
@@ -3724,6 +3718,7 @@ pixeldepth.monetary = monetary = (function(){
 
     							case 2:
     								yootil.create.page(new RegExp("\\/user\\/" + yootil.user.id() + "\\?monetarydonation&view=2"), "Received " + this.settings.text.donations);
+                                    $("#content").empty();
     								yootil.create.nav_branch("/user/" + yootil.user.id() + "?monetarydonation&view=2", "Received " + this.settings.text.donations);
 
     								if(this.can_send_receive()){
@@ -3742,6 +3737,7 @@ pixeldepth.monetary = monetary = (function(){
 
     								if(don_id){
     									yootil.create.page(new RegExp("\\/user\\/" + id + "\\?monetarydonation&view=3&id=[\\d\\.]+"), "Viewing " + this.settings.text.donation);
+                                        $("#content").empty();
 
     									if(this.can_send_receive()){
     										this.build_view_donation_html(don_id);

@@ -113,9 +113,10 @@ money.bank = (function(){
 					money.show_default();
 				}
 			}
-            else if (yootil.location.profile_home()  && location.href.match(/\/\?bank\/?/i) && money.settings.staff_edit_money && money.is_allowed_to_edit_money()){
+            else if (yootil.location.profile_home()  && location.href.match(/\?bank\/?/i) && money.settings.staff_edit_money && money.is_allowed_to_edit_money()){
                 var id = money.params.user_id;
-                yootil.create.page(new RegExp("\\/user\\/" + id + "\\bank"), "View Transactions");
+                yootil.create.page(new RegExp("\\/user\\/" + id + "\\?bank"), "View Transactions");
+                $("#content").empty();
                 yootil.create.nav_branch("/user/" + id + "?bank", "View Transactions");
                 this.show_transaction_list();
             }
@@ -211,18 +212,9 @@ money.bank = (function(){
 			trans_html += '</table>';
 
 			var self = this;
-			var trans = yootil.create.container("Recent " + this.settings.text.transactions + " <span id='bank-clear-transactions'>(Clear)</span>", trans_html);
+			var trans = yootil.create.container("Recent " + this.settings.text.transactions, trans_html);
 
 			trans.show().appendTo("#content");
-
-			trans.find("#bank-clear-transactions").click(function(){
-				var no_transactions = $('<tr class="bank-transaction-list-row"><td><em>There are no ' + self.settings.text.transactions.toLowerCase() + ' to view.</td></tr>');
-				var list = $("#bank-transaction-list");
-
-				list.find("tr").remove();
-				list.append(no_transactions);
-				self.clear_transactions();
-			});
 		},
 
 

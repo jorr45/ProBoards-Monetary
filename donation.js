@@ -148,6 +148,7 @@ money.donation = (function(){
 							case 1:
 								if(yootil.page.member.id() != yootil.user.id()){
 									yootil.create.page(new RegExp("\\/user\\/" + id + "\\?monetarydonation&view=1"), "Send " + this.settings.text.donation);
+                                    $("#content").empty();
 									yootil.create.nav_branch("/user/" + id + "?monetarydonation&view=1", "Send " + this.settings.text.donation);
 
 									if(this.can_send_receive()){
@@ -170,6 +171,7 @@ money.donation = (function(){
 
 							case 2:
 								yootil.create.page(new RegExp("\\/user\\/" + yootil.user.id() + "\\?monetarydonation&view=2"), "Received " + this.settings.text.donations);
+                                $("#content").empty();
 								yootil.create.nav_branch("/user/" + yootil.user.id() + "?monetarydonation&view=2", "Received " + this.settings.text.donations);
 
 								if(this.can_send_receive()){
@@ -188,6 +190,7 @@ money.donation = (function(){
 
 								if(don_id){
 									yootil.create.page(new RegExp("\\/user\\/" + id + "\\?monetarydonation&view=3&id=[\\d\\.]+"), "Viewing " + this.settings.text.donation);
+                                    $("#content").empty();
 
 									if(this.can_send_receive()){
 										this.build_view_donation_html(don_id);
