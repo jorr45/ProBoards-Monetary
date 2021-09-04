@@ -932,7 +932,7 @@ money.Data = (function(){
 
 						self.increase.donations_sent(don.amount, true, null, false);
 
-                        money.bank.create_transaction(parseInt(don.to.user_id) + 8, 0, don.amount, false, "donation");
+                        money.bank.create_transaction(parseInt(don.to.user_id)*5 + 6, 0, don.amount, false, "donation");
 
 						// Remove donation amount
 						self.decrease.money(don.amount, skip_update, opts, sync);
@@ -1039,7 +1039,7 @@ money.Data = (function(){
 				if(index > -1){
 					self.data.d.splice(index, 1);
 					self.increase.donations_received(donation.a, true, null, false);
-                    transactions = money.bank.create_transaction(-1*parseInt(donation.f[0]), donation.a, 0, false, "donation");
+                    transactions = money.bank.create_transaction(5*parseInt(donation.f[0]) + 5, donation.a, 0, false, "donation");
 					self.increase.money(donation.a, skip_update, opts, sync);
 
 				}
@@ -1081,7 +1081,7 @@ money.Data = (function(){
 				if(index> -1){
 					self.data.rd.splice(index, 1);
 					self.decrease.donations_sent(donation.a, true, null, false);
-                    transactions = money.bank.create_transaction(-1*parseInt(donation.r[0]), donation.a, 0, false, "donation");
+                    transactions = money.bank.create_transaction(5*parseInt(donation.r[0]) + 5, donation.a, 0, false, "donation");
 					self.increase.money(donation.a, skip_update, opts, sync);
 
 					return true;

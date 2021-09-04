@@ -113,7 +113,10 @@ money.bank = (function(){
 					money.show_default();
 				}
 			}
-            else if (yootil.location.profile_home() && money.settings.staff_edit_money && money.is_allowed_to_edit_money()){
+            else if (yootil.location.profile_home()  && location.href.match(/\/\?bank\/?/i) && money.settings.staff_edit_money && money.is_allowed_to_edit_money()){
+                var id = money.params.user_id;
+                yootil.create.page(new RegExp("\\/user\\/" + id + "\\bank"), "View Transactions");
+                yootil.create.nav_branch("/user/" + id + "?bank", "View Transactions");
                 this.show_transaction_list();
             }
 		},
@@ -177,15 +180,17 @@ money.bank = (function(){
 							type = this.settings.text.types.GIFTMONEY;
 							break;
 
+                        default:
+                            if (transactions[t][0] >= 9){
+                                if (transactions[t][0] % 5 == 0) {
+                                    type = "RECEIVE FROM USER #" + (transactions[t][0] - 5)/5;
+                                } else if (transactions[t][0] % 5 == 1){
+                                    type = "DONATE TO USER #" + (transactions[t][0] - 1 - 5)/5;
+                                }
+                            }
+                            break;
+
 					}
-
-                    if (transactions[t][0] < 0) {
-                        type = "RECEIVE FROM USER #" + transactions[t][0]*-1;
-                    }
-
-                    if (transactions[t][0] >= 9){
-                        type = "DONATE TO USER #" + (transactions[t][0]-8);
-                    }
 
 					var in_amount = (transactions[t][1] > 0)? transactions[t][1] : "--";
 					var out_amount = (transactions[t][2] > 0)? transactions[t][2] : "--";
@@ -764,12 +769,12 @@ money.bank = (function(){
 
 			}
 
-            if (type < 0) {
-                trans_type = "RECEIVE FROM USER #" + type*-1;
-            }
-
             if (type >= 9){
-                trans_type = "DONATE TO USER #" + (type-8);
+                if (type % 5 == 0) {
+                    trans_type = "RECEIVE FROM USER #" + (type - 5)/5;
+                } else if (type % 5 == 1){
+                    trans_type = "DONATE TO USER #" + (type - 1 - 5)/5;
+                }
             }
 
 			trans_html += '<tr class="bank-transaction-list-row">';
