@@ -1981,7 +1981,7 @@ monetary.shop = (function(){
                             var the_donation = {
 
                                 to: monetary.data(item.item_seller),
-                                amount: price,
+                                amount: price * grouped_items[key].quantity,
 
                                 message: {
                                     text: "For the purchase of " + item.item_name + "by " +  yootil.user.name(),
@@ -1996,6 +1996,7 @@ monetary.shop = (function(){
                             };
 
                             monetary.data(yootil.user.id()).donation.send(the_donation);
+							total -= price * grouped_items[key].quantity;
                         }
 
 						var the_item = {
