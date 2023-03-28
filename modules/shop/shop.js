@@ -501,6 +501,7 @@ monetary.shop = (function(){
 				items[i].item_show = 1;
 				items[i].item_tradable = 1;
 				items[i].item_refundable = 1;
+				items[i].item_seller = 1;
 				
 				this.lookup[items[i].item_id] = items[i];
 
@@ -607,7 +608,8 @@ monetary.shop = (function(){
 				item_image: "",
 				item_category: 99,
 				item_refundable: 0,
-				item_tradable: 0
+				item_tradable: 0,
+				item_seller: 1
 
 			};
 
@@ -1973,6 +1975,25 @@ monetary.shop = (function(){
 								price -= (price * (discount / 100));
 							}
 						}
+
+						var the_donation = {
+
+							to: monetary.data(item.item_seller),
+							amount: price,
+
+							message: {
+								text: "For the purchase of " + item.item_name + " by " +  yootil.user.name(),
+								len: 1000
+							},
+
+							from: {
+								id: yootil.user.id(),
+								name: yootil.user.name()
+							}
+
+						};
+
+						monetary.data(yootil.user.id()).donation.send(the_donation);
 
 						var the_item = {
 
