@@ -1210,7 +1210,7 @@ monetary.shop = (function(){
 					inline_css = " border-top-width: 1px;";
 				}
 				
-				html += '<table class="list"><thead><tr class="head"><th style="width: 140px;' + inline_css + '">&nbsp;</th><th style="width: 22%;' + inline_css + '">' + this.settings.text.item + ' ' + this.settings.text.name + '</th><th style="width: 78%;' + inline_css + '" class="main">' + this.settings.text.description + '</th><th style="width: 110px;' + inline_css + '">' + this.settings.text.price + '</th><th style="width: 150px;' + inline_css + '">&nbsp;</th></tr></thead><tbody class="list-content">';
+				html += '<table class="list"><thead><tr class="head"><th style="width: 140px;' + inline_css + '">&nbsp;</th><th style="width: 22%;' + inline_css + '">' + this.settings.text.item + ' ' + this.settings.text.name + '</th><th style="width: 15%;' + inline_css + '">' + 'Seller' + '</th><th style="width: 63%;' + inline_css + '" class="main">' + this.settings.text.description + '</th><th style="width: 110px;' + inline_css + '">' + this.settings.text.price + '</th><th style="width: 150px;' + inline_css + '">&nbsp;</th></tr></thead><tbody class="list-content">';
 
 				var counter = 0;
 
@@ -1233,9 +1233,10 @@ monetary.shop = (function(){
 
 					html += '<tr class="item' + klass + '">';
 					html += '<td style="text-align: center;' + ribbon + '" class="shop_ribbon' + extra_ribbon_class + '"><img src="' + this.get_image_src(this.category_items[key][i]) + '"' + img_size + disp + ' alt="' + yootil.html_encode(this.category_items[key][i].item_name) + '" title="' + yootil.html_encode(this.category_items[key][i].item_name) + '" /></td>';
-					html += '<td>' + this.category_items[key][i].item_name + '</td>';
-					html += '<td>' + pb.text.nl2br(this.category_items[key][i].item_description) + '</td>';
-					html += '<td>' + monetary.settings.money_symbol + yootil.number_format(monetary.format(price, true)) + '</td>';
+					html += '<td style="text-align: center;">' + this.category_items[key][i].item_name + '</td>';
+					html += '<td style="text-align: center;">User #' + this.category_items[key][i].item_seller + '</td>';
+					html += '<td style="text-align: center;">' + pb.text.nl2br(this.category_items[key][i].item_description) + '</td>';
+					html += '<td style="text-align: center;">' + monetary.settings.money_symbol + yootil.number_format(monetary.format(price, true)) + '</td>';
 
 					var disabled_button = "";
 					var current_qty = this.data(yootil.user.id()).get.quantity(this.category_items[key][i].item_id);
@@ -1984,7 +1985,7 @@ monetary.shop = (function(){
                                 amount: price * grouped_items[key].quantity,
 
                                 message: {
-                                    text: "For the purchase of " + item.item_name + "by " +  yootil.user.name(),
+                                    text: "For the purchase of " + grouped_items[key].quantity + " x " + item.item_name + " by " +  yootil.user.name(),
                                     len: 1000
                                 },
 
