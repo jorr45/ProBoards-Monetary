@@ -26,7 +26,8 @@ monetary.shop = (function(){
 		 * @property {Boolean} settings.enabled Module enabled or not.
 		 * @property {Boolean} settings.icon_enabled If enable, an icon will show in the Yootil bar.
 		 * @property {String} settings.base_image The base URL for the images.
-		 * @property {Boolean} settings.show_total_bough If enabled, on profiles it will show total bought.
+		 * @property {Number} settings.base_tax_rate The base tax rate for items in the shop.
+		 * @property {Boolean} settings.show_total_bought If enabled, on profiles it will show total bought.
 		 * @property {Boolean} settings.items_private Items can be private to the user if enabled (kinda pointless).
 		 * @property {Number} settings.refund_percent The default refund percentage amount per item.
 		 * @property {Boolean} settings.allow_removing If disable then items can not be removed.
@@ -75,6 +76,7 @@ monetary.shop = (function(){
 			enabled: true,
 			icon_enabled: true,
 			base_image: "",
+			base_tax_rate: 0,
 			show_total_bought: true,
 			items_private: false,
 			refund_percent: 50,
@@ -246,7 +248,15 @@ monetary.shop = (function(){
 				}
 			} else if(yootil.location.profile_home()){
 				if(yootil.user.is_staff() || !this.settings.items_private || (this.settings.items_private && yootil.user.id() == yootil.page.member.id())){
-					this.create_shop_item_box();
+					this.create_shop_item_box(false);
+				}
+				
+				if (location.href.match(/\?cardsview$/i)){
+					var id = ~~ yootil.page.member.id();
+    				yootil.create.page(new RegExp("\\/user\\/" + id + "\\?cardsview"), "Card Collection View");
+                    $("#content").empty();
+					yootil.create.nav_branch("/user/" + id + "?cardsview", "Card Collection View");
+					this.create_shop_item_box(true);
 				}
 			}
 
@@ -310,7 +320,9 @@ monetary.shop = (function(){
 					this.settings.enabled = (!! ~~ settings.shop_enabled)? true : false;
 					this.settings.icon_enabled = (!! ~~ settings.shop_icon_enabled)? true : false;
 					this.items = (settings.shop_items && settings.shop_items.length)? settings.shop_items : this.items;
-					this.settings.base_image = (settings.item_image_base && settings.item_image_base.length)? settings.item_image_base : this.settings.base_image;
+					this.settings.base_image = (settings.item_image_base && settings.item_image_base.length)? settings.item_image_base : this.settings.base_image;					
+					this.settings.base_tax_rate = (settings.base_tax_rate && settings.base_tax_rate.length)? settings.base_tax_rate : 0;
+					this.settings.tax_recipient = settings.tax_recipient || [];
 					this.settings.refund_percent = (settings.refund_percent && settings.refund_percent.length)? settings.refund_percent : this.settings.refund_amount;
 					this.settings.show_total_bought = (!! ~~ settings.show_total_bought)? true : false;
 					this.settings.items_private = (!! ~~ settings.items_private)? true : false;
@@ -415,9 +427,10 @@ monetary.shop = (function(){
 						if(typeof this.items[i].item_show === "undefined" || !this.items[i].item_show.length){
 							this.lookup[this.items[i].item_id].item_show = 1;
 						}
-
-						if(this.category_lookup[this.items[i].item_category]){
-							if(this.items[i].item_show == 1){
+						
+						const category = this.category_lookup[this.items[i].item_category];
+						if(category){
+							if (this.items[i].item_show == 1 || (!category.category_name || !category.category_name.length)){
 								if(!this.category_items[this.items[i].item_category]){
 									this.category_items[this.items[i].item_category] = [];
 								}
@@ -489,8 +502,35 @@ monetary.shop = (function(){
 						}
 					}
 				}
+				
+				if (items[i].use_prob_cat_ids && items[i].use_prob_cat_ids.length){
+					// Split the input string by commas to get each pair
+					const pairs = items[i].use_prob_cat_ids.split(',');
 
-				if(id_pool.length){
+					// Create an empty object to hold the ID-probability pairs
+					const probabilities = {};
+
+					// Loop through each pair
+					pairs.forEach(pair => {
+					    // Split the pair by the colon to separate the ID and probability
+					    const [id, probability] = pair.split(':').map(s => s.trim());
+					  
+					    // Add the ID-probability pair to the object
+					    probabilities[id] = []
+					  
+					    category_items = this.category_items[id];
+
+						if(category_items && category_items.length){
+							for(var ci = 0, cil = category_items.length; ci < cil; ci ++){
+								probabilities[id].push(category_items[ci].item_id);
+							}
+						}
+					  
+					});
+					id_pool = probabilities;
+				}
+
+				if(id_pool.length || (typeof(id_pool) == 'object' && id_pool !== null)){
 					this.random_id_pool["___" + i + "___"] = id_pool;
 				} else {
 					continue;	
@@ -501,7 +541,6 @@ monetary.shop = (function(){
 				items[i].item_show = 1;
 				items[i].item_tradable = 1;
 				items[i].item_refundable = 1;
-				items[i].item_seller = 1;
 				
 				this.lookup[items[i].item_id] = items[i];
 
@@ -689,21 +728,23 @@ monetary.shop = (function(){
 		 * Creates the box for the items on user profiles.
 		 */
 
-		create_shop_item_box: function(){
+		create_shop_item_box: function(card_collection){
 			if(!this.has_items()){
 				return;
 			}
+			
+			if (!card_collection){
+				var box = yootil.create.profile_content_box();
+				var first_box = $("form.form_user_status .content-box:first");
+				var using_custom = false;
 
-			var box = yootil.create.profile_content_box();
-			var first_box = $("form.form_user_status .content-box:first");
-			var using_custom = false;
-
-			if($("#monetary_shop_items").length){
-				first_box = $("#monetary_shop_items");
-				using_custom = true;
+				if($("#monetary_shop_items").length){
+					first_box = $("#monetary_shop_items");
+					using_custom = true;
+				}
 			}
 
-			if(first_box.length){
+			if(card_collection || first_box.length){
 				var items_html = "";
 				var user_id = yootil.page.member.id() || yootil.user.id();
 				var items = this.data(user_id).get.items();
@@ -734,11 +775,24 @@ monetary.shop = (function(){
 					}
 
 					if(this.lookup[key]){
-						items_html += '<div data-shop-item-id="' + this.lookup[key].item_id + '" title="' + yootil.html_encode(this.lookup[key].item_name) + '" class="shop_items_list"><img src="' + this.get_image_src(this.lookup[key]) + '"' + img_size + disp + ' />' + num + '</div>';
+						if ((!this.lookup[key].is_card && !card_collection && !this.lookup[key].is_card_deck)){
+							items_html += '<div data-shop-item-id="' + this.lookup[key].item_id + '" title="' + yootil.html_encode(this.lookup[key].item_name) + '" class="shop_items_list"><img src="' + this.get_image_src(this.lookup[key]) + '"' + img_size + disp + ' />' + num + '</div>';
+						}
+						else if(this.lookup[key].is_card == 1 && card_collection){
+							items_html += '<div data-shop-item-id="' + this.lookup[key].item_id + '" title="' + yootil.html_encode(this.lookup[key].item_name) + '" class="shop_items_list"><img src="' + this.get_image_src(this.lookup[key]) + '" style="max-height:200px; height:auto; width:auto;"' + disp + ' />' + num + '</div>';
+						}
+						else if(this.lookup[key].is_card_deck == 1 && !card_collection){
+							items_html += '<div data-shop-item-id="' + this.lookup[key].item_id + '" title="' + yootil.html_encode(this.lookup[key].item_name) + '" class="shop_items_list"><a href="/user/' + user_id + '?cardsview"><img src="' + this.get_image_src(this.lookup[key]) + '"' + img_size + disp + ' />' + num + '</a></div>';
+						}
 					}
 				}
+				
+				if(card_collection){
+					var container = yootil.create.container("Card Collection", items_html).show();
+					container.appendTo("#content");
+				}
 
-				if(using_custom){
+				else if(using_custom){
 					first_box.addClass("monetary_shop_profile_box").show().html(items_html);
 				} else {
 					box.addClass("monetary_shop_profile_box");
@@ -875,7 +929,7 @@ monetary.shop = (function(){
 
 			msg += "<div>";
 
-			msg += "<div class='item_info_img'><img src='" + self.get_image_src(shop_item) + "' /></div>";
+			msg += "<div class='item_info_img'><img style='max-width:550px; max-height:600px;' src='" + self.get_image_src(shop_item) + "' /></div>";
 			msg += "<div class='item_info_info'>";
 
 			msg += "<p><strong>" + self.settings.text.item + " " + self.settings.text.name + ":</strong> " + shop_item.item_name + "</p>";
@@ -954,7 +1008,7 @@ monetary.shop = (function(){
 
 			pb.window.dialog("monetaryshop-item-info-dialog", {
 				modal: true,
-				height: 320,
+				height: 700,
 				width: 600,
 				title: shop_item.item_name + refund_txt,
 				html: msg,
@@ -1408,6 +1462,10 @@ monetary.shop = (function(){
 					var klass = (counter == 0)? ' class="ui-active"' : "";
 					var cat_name = (id == 99)? "Forum Enhancements" : this.category_lookup[id].category_name;
 					var css = (id == 99)? " style='margin-left: 25px'" : "";
+					
+					if (!cat_name || !cat_name.length){
+						continue;
+					}
 
 					html += '<li' + css + klass + ' id="category_tab_' + id + '"><a href="#">' + cat_name + '</a></li>';
 					counter ++;
@@ -1820,9 +1878,9 @@ monetary.shop = (function(){
 			for(var i = 0; i < this.cart.length; i ++){
 				var item = this.lookup[this.cart[i]];
 
-				if(item.item_show != 1){
+				/* if(item.item_show != 1){
 					continue;
-				}
+				} */
 
 				var price = parseFloat(item.item_price);
 
@@ -1877,9 +1935,9 @@ monetary.shop = (function(){
 				for(var key in grouped_items){
 					var item = this.lookup[key];
 
-					if(item.item_show != 1){
-						continue;
-					}
+					// if(item.item_show != 1){
+						// continue;
+					// }
 
 					total_items ++;
 
@@ -1898,7 +1956,7 @@ monetary.shop = (function(){
 					}
 
 					msg += "<tr class='item'>";
-					msg += "<td style='width: 130px;" + ribbon + "' class='monetaryshop_item_img shop_ribbon" + extra_ribbon_class + "'><img src='" + this.get_image_src(item) + "'' + img_size + disp + ' /></td>";
+					msg += "<td style='width: 130px;" + ribbon + "' class='monetaryshop_item_img shop_ribbon" + extra_ribbon_class + "'><img src='" + this.get_image_src(item) + "'" + img_size + disp + " /></td>";
 					msg += "<td>" + item.item_name + "</td>";
 					msg += "<td style='width: 80px;'>" + grouped_items[key].quantity + "</td>";
 					msg += "<td>" + monetary.settings.money_symbol + yootil.number_format(monetary.format(price, true)) + "</td>";
@@ -1917,6 +1975,8 @@ monetary.shop = (function(){
 					}
 
 				};
+				
+				orig_grouped_items = {...grouped_items};
 
 				var return_data = self.check_and_give_random_items(grouped_items);
 				
@@ -1941,6 +2001,75 @@ monetary.shop = (function(){
 					});
 
 					var total = 0;
+					var update_users = new Set();
+					
+					for (var key in orig_grouped_items){
+						var item = self.lookup[key];
+						var price = item.item_price;
+
+						var tax_rate = item.tax_rate && item.tax_rate.length ? item.tax_rate : self.settings.base_tax_rate;
+						
+						if(item.item_discount && item.item_discount > 0){
+							var discount = item.item_discount | 0;
+
+							if(self.images["ribbon" + discount]){
+								price -= (price * (discount / 100));
+							}
+						}
+
+						if(tax_rate && tax_rate > 0 && self.settings.tax_recipient && self.settings.tax_recipient.length){
+
+							var the_tax = {
+
+                                to: monetary.data(self.settings.tax_recipient),
+                                amount: tax_rate / 100 * price * orig_grouped_items[key].quantity,
+
+                                message: {
+                                    text: "$", //"Purchase: " + orig_grouped_items[key].quantity + " x " + item.item_name,
+                                    len: 200
+                                },
+
+                                from: {
+                                    id: yootil.user.id(),
+                                    name: yootil.user.name()
+                                }
+
+                            };
+
+                            monetary.data(yootil.user.id()).donation.send(the_tax, true);
+							total -= price * tax_rate / 100 * orig_grouped_items[key].quantity;
+							price -= price * tax_rate / 100;
+							
+							update_users.add(self.settings.tax_recipient[0]);
+
+						}
+
+						if(item.item_seller.length > 0){
+							console.log(price, key, orig_grouped_items[key]);
+                        
+                            var the_donation = {
+
+                                to: monetary.data(item.item_seller),
+                                amount: price * orig_grouped_items[key].quantity,
+
+                                message: {
+                                    text: "Shop: " + item.item_name + " x " + orig_grouped_items[key].quantity,
+                                    len: 100
+                                },
+
+                                from: {
+                                    id: yootil.user.id(),
+                                    name: yootil.user.name()
+                                }
+
+                            };
+							
+
+                            monetary.data(yootil.user.id()).donation.send(the_donation, true);
+							total -= price * orig_grouped_items[key].quantity;
+							update_users.add(item.item_seller[0]);
+                        }
+					}
 
 					for(var key in grouped_items){
 						var item = self.lookup[key];
@@ -1949,7 +2078,7 @@ monetary.shop = (function(){
 						// Is there a reason we need this?
 						// If yes, then lookup in the pool to see
 						// if it is in a secret item.
-
+/* 
 						if(item.item_show != 1){
 							if(return_data[2]){
 								var random_but_can_buy = false;
@@ -1965,10 +2094,10 @@ monetary.shop = (function(){
 							if(!random_but_can_buy) {
 								continue;
 							}
-						}
+						} */
 
 						var price = (grouped_items[key].temp_price)? parseFloat(grouped_items[key].temp_price) : parseFloat(item.item_price);
-
+						var original_price = price;
 						if(item.item_discount && item.item_discount > 0){
 							var discount = item.item_discount | 0;
 
@@ -1977,28 +2106,6 @@ monetary.shop = (function(){
 							}
 						}
 
-						if(item.item_seller.length > 0){
-                        
-                            var the_donation = {
-
-                                to: monetary.data(item.item_seller),
-                                amount: price * grouped_items[key].quantity,
-
-                                message: {
-                                    text: "For the purchase of " + grouped_items[key].quantity + " x " + item.item_name + " by " +  yootil.user.name(),
-                                    len: 1000
-                                },
-
-                                from: {
-                                    id: yootil.user.id(),
-                                    name: yootil.user.name()
-                                }
-
-                            };
-
-                            monetary.data(yootil.user.id()).donation.send(the_donation);
-							total -= price * grouped_items[key].quantity;
-                        }
 
 						var the_item = {
 
@@ -2010,7 +2117,7 @@ monetary.shop = (function(){
 						
 						self.data(yootil.user.id()).add.item(the_item, true);
 
-						total += price * grouped_items[key].quantity;
+						total += original_price * grouped_items[key].quantity;
 					}
 
 					/**
@@ -2032,6 +2139,11 @@ monetary.shop = (function(){
 					});
 
 					self.cart = [];
+					console.log(update_users.values());
+					for (user of update_users.values()){
+						console.log(user);
+						monetary.data(user).update();
+					}
 					self.data(yootil.user.id()).update();
 					monetary.data(yootil.user.id()).decrease.money(total, false, null, true);
 
@@ -2065,7 +2177,7 @@ monetary.shop = (function(){
 							var item = self.lookup[random_items[index].item_id];
 							
 							if(item){
-								msg += "<img src='" + self.get_image_src(item) + "'' + img_size + disp + ' /> ";
+								msg += "<img style='max-width:" + self.settings.mini_img_width + "px; max-height:" + self.settings.mini_image_height+"px;' src='" + self.get_image_src(item) + "'' + img_size + disp + ' /> ";
 							}	
 						}
 						
@@ -2136,16 +2248,51 @@ monetary.shop = (function(){
 			for(var key in grouped_items){
 				var item = this.lookup[key];
 				
-				if(item.item_ids || (item.maximum_price && item.minimum_price) || item.use_cat_id){
+				if(item.item_ids || (item.maximum_price && item.minimum_price) || item.use_cat_id || item.use_prob_cat_ids){
 					if(key.match(/^___\d+___$/)){						
 						var total = grouped_items[key].quantity;
 						var id_pool = this.random_id_pool[key];
 
 						random_item_ids[key] = key;
+						
+						// Function to pick a category based on probability
+						pickCategory = (probs) => {
+								const random = Math.random();
+								let sum = 0;
+
+								for (const id in probs) {
+									sum += probs[id];
+									if (random < sum) {
+										return id;
+									}
+							  }
+							};
+						
+                        var probabilities = {};
+						if (item.use_prob_cat_ids){
+							const pairs = item.use_prob_cat_ids.split(',');
+
+							// Loop through each pair
+							pairs.forEach(pair => {
+								// Split the pair by the colon to separate the ID and probability
+								const [id, probability] = pair.split(':').map(s => s.trim());
+							  
+								// Add the ID-probability pair to the object
+								probabilities[id] = parseFloat(probability);
+							});
+						}
 
 						while(total --){
-							var rand = Math.floor(Math.random() * id_pool.length);
-							var random_id = id_pool[rand];
+							if (item.use_prob_cat_ids){
+								var category = pickCategory(probabilities);
+								var pool = id_pool[category];
+								var rand = Math.floor(Math.random() * pool.length);
+								var random_id = pool[rand];
+							}
+							else {
+								var rand = Math.floor(Math.random() * id_pool.length);
+								var random_id = id_pool[rand];
+							}
 							
 							if(random_id && this.lookup[random_id]){
 								random_items.push(this.lookup[random_id]);
@@ -2213,8 +2360,12 @@ monetary.shop = (function(){
 								}
 
 								if(self.lookup[key]){
-									str += '<span class="pd_shop_mini_item" data-shop-item-id="' + self.lookup[key].item_id + '" title="' + yootil.html_encode(self.lookup[key].item_name) + ' (x' + items[key].q + ')"><img src="' + self.get_image_src(self.lookup[key]) + '"' + img_size + disp + ' /></span>';
-
+									if (self.lookup[key].is_card_deck != 1 && self.lookup[key].is_card != 1){
+										str += '<span class="pd_shop_mini_item" data-shop-item-id="' + self.lookup[key].item_id + '" title="' + yootil.html_encode(self.lookup[key].item_name) + ' (x' + items[key].q + ')"><img src="' + self.get_image_src(self.lookup[key]) + '"' + img_size + disp + ' /></span>';
+									}
+									else if (self.lookup[key].is_card_deck == 1){
+										str += '<span class="pd_shop_mini_item" data-shop-item-id="' + self.lookup[key].item_id + '" title="' + yootil.html_encode(self.lookup[key].item_name) + ' (x' + items[key].q + ')"><a href="/user/' +user_id + '?cardsview"><img src="' + self.get_image_src(self.lookup[key]) + '"' + img_size + disp + ' /></a></span>';
+									}
 									counter ++;
 								}
 							}
@@ -2235,17 +2386,31 @@ monetary.shop = (function(){
 								}
 							}
 
-							if(parseInt(self.settings.mini_image_percent) > 0){
-								$(this).find(".monetary_shop_items span[data-shop-item-id] img").bind("load", function(){
-									var width = this.width;
-									var height = this.height;
-
+							$(this).find(".monetary_shop_items span[data-shop-item-id] img").bind("load", function(){
+								var width = this.width;
+								var height = this.height;
+								if(parseInt(self.settings.mini_image_percent) > 0){
 									this.width = (width - (width * (parseInt(self.settings.mini_image_percent) / 100)));
 									this.height = (height - (height * (parseInt(self.settings.mini_image_percent) / 100)));
+								}
+								width = this.width;
+								height = this.height;
+								if(parseInt(self.settings.mini_image_width) > 0 && this.width > parseInt(self.settings.mini_image_width)){
+									var ratio = parseInt(self.settings.mini_image_width) / this.width;
+									this.width = width*ratio;
+									this.height = height*ratio;
+								}
+								
+								width = this.width;
+								height = this.height;
+								if(parseInt(self.settings.mini_image_height) > 0 && this.height > parseInt(self.settings.mini_image_height)){
+									var ratio = parseInt(self.settings.mini_image_height) / this.height;
+									this.width = width*ratio;
+									this.height = height*ratio;
+								}
 
-									$(this).fadeIn("slow");
-								});
-							}
+								$(this).fadeIn("slow");
+							});
 						}
 					}
 				});
