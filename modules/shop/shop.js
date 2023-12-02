@@ -2333,7 +2333,7 @@ monetary.shop = (function(){
 
 				var self = this;
 				var time_24 = (yootil.user.time_format() == "12hr")? false : true;
-				var img_size = this.get_size_css();
+				var img_size = this.get_size_css(true);
 				var disp = (!img_size.length && parseInt(this.settings.mini_image_percent) > 0)? " style='display: none;'" : "";
 
 				minis.each(function(){
