@@ -60,7 +60,7 @@ monetary.shop.trade = (function(){
 		 * @property {Number} PAGE_TIME_EXPIRY Time until the page expires.
 		 */
 
-		PAGE_TIME_EXPIRY: 45,
+		PAGE_TIME_EXPIRY: 75,
 
 		/**
 		 * @property {Number} interval Interval id.
@@ -386,8 +386,8 @@ monetary.shop.trade = (function(){
 
 			owner_html += "<div class='trader_name'>You</div><br /><div id='trade_owner_items'>";
 
-			var img_size = this.shop.get_size_css(true);
-			var disp = (!img_size.length && parseInt(self.shop.settings.mini_image_percent) > 0)? " style='display: none;'" : "";
+			var img_size = this.shop.get_size_css();
+			var disp = (!img_size.length && parseInt(self.shop.settings.image_percent) > 0)? " style='display: none;'" : "";
 
 			for(var key in own_items){
 				var item = this.shop.lookup[key];
@@ -587,11 +587,11 @@ monetary.shop.trade = (function(){
 				}
 			});
 
-			if(parseInt(self.shop.settings.mini_image_percent) > 0){
+			if(parseInt(self.shop.settings.image_percent) > 0){
 				$("#monetaryshop-trade-dialog span[data-shop-item-id] img").bind("load", function(){
 					var width = this.width;
 					var height = this.height;
-					var percent = parseInt(self.shop.settings.mini_image_percent);
+					var percent = parseInt(self.shop.settings.image_percent);
 
 					this.width = (width - (width * (percent / 100)));
 					this.height = (height - (height * (percent / 100)));
@@ -903,7 +903,7 @@ monetary.shop.trade = (function(){
 			var member_id = yootil.page.member.id();
 			var html = "";
 			var img_size = this.shop.get_size_css(true);
-			var disp = (!img_size.length && parseInt(this.shop.settings.mini_image_percent) > 0)? " style='display: none;'" : "";
+			var disp = (!img_size.length && parseInt(this.shop.settings.image_percent) > 0)? " style='display: none;'" : "";
 			var valid_trade = (the_trade && the_trade.f && the_trade.f.i)? true : false;
 			var trader_name = (valid_trade)? the_trade.f.u[1] : "Member";
 			var trade_gift_img = (gift)? this.shop.images.gift_big : this.shop.images.trade_big;
@@ -1237,11 +1237,11 @@ monetary.shop.trade = (function(){
 				this.timer_running = true;	
 			}
 			
-			if(parseInt(self.shop.settings.mini_image_percent) > 0){
+			if(parseInt(self.shop.settings.image_percent) > 0){
 				$("div.trade_profile span.pd_shop_mini_item img").bind("load", function(){
 					var width = this.width;
 					var height = this.height;
-					var percent = parseInt(self.shop.settings.mini_image_percent);
+					var percent = parseInt(self.shop.settings.image_percent);
 
 					this.width = (width - (width * (percent / 100)));
 					this.height = (height - (height * (percent / 100)));
@@ -1517,11 +1517,11 @@ monetary.shop.trade = (function(){
 				this.timer_running = true;	
 			}
 			
-			if(parseInt(self.shop.settings.mini_image_percent) > 0){
+			if(parseInt(self.shop.settings.image_percent) > 0){
 				$("div.trade_profile span.pd_shop_mini_item img").bind("load", function(){
 					var width = this.width;
 					var height = this.height;
-					var percent = parseInt(self.shop.settings.mini_image_percent);
+					var percent = parseInt(self.shop.settings.image_percent);
 
 					this.width = (width - (width * (percent / 100)));
 					this.height = (height - (height * (percent / 100)));
