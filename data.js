@@ -74,7 +74,9 @@ money.Data = (function(){
 
 			rd: [],
 
-			n: []
+			n: [], 
+			
+			p: 0,
 
 		};
 
@@ -99,6 +101,7 @@ money.Data = (function(){
 		this.data.ds = (parseFloat(this.data.ds) > 0)? parseFloat(this.data.ds) : 0;
 		this.data.dr = (parseFloat(this.data.dr) > 0)? parseFloat(this.data.dr) : 0;
 		this.data.n = (typeof this.data.n == "object" && this.data.n.constructor == Array)? this.data.n : [];
+		this.data.p = (typeof this.data.p == "number")? this.data.p : 0;
 
 		/**
 		 * Updates the key data, however you can avoid an actual AJAX request if needed.  Usually this is called internally.
@@ -503,6 +506,27 @@ money.Data = (function(){
 				self.data.dr = parseFloat(self.data.dr) + parseFloat(amount);
 				self.data.dr = self.fixed(self.data.dr);
 				self.update(skip_update, opts, sync);
+			},
+			
+			/**
+			 * Sets the new total post count. Returns missing posts.
+			 *
+			 * @param {Boolean}	skip_update Pass true if you do not want to perform an actual AJAX update.
+			 * @param {Object} options Yootil key options that get passed on to the set method.
+			 * @param {Boolean} sync To sync up data across tabs / windows, pass true.
+			 */
+
+			post_count: function(skip_update, opts, sync){
+				var post_count = yootil.user.posts();
+				var prior_count = parseFloat(self.data.p);
+				var new_posts = 0
+				if (prior_count > 0 && post_count - prior_count > 1){
+					new_posts = post_count - prior_count - 1;
+				}
+				self.data.p = post_count;
+				self.data.p = self.fixed(self.data.p);
+				self.update(skip_update, opts, sync);
+				return new_posts;
 			}
 
 		};

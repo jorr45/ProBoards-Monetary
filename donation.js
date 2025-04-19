@@ -635,7 +635,7 @@ money.donation = (function(){
 				return msg.replace(/\[br\]/g, "<br />");
 			}
 
-			return "----";
+			return "";
 		},
 
 		/**

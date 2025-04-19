@@ -92,6 +92,7 @@ var money = {
 	 * @property {Number} settings.posting.earn_from_quick_reply.amounts.per_poll Amount for adding a poll to a thread.
 	 * @property {Number} settings.posting.earn_from_quick_reply.amounts.per_reply Amount for when replying to a thread.
 	 * @property {Number} settings.posting.earn_from_quick_reply.amounts.per_quick_reply Amount for replying while using the quick reply.
+	 * @property {Number} settings.posting.earn_from_quick_reply.amounts.per_mobile_post Amount for missing posts (on mobile).
 	 * @property {Object} settings.posting.earn_from_quick_reply.amounts.categories Can override amounts per category.
 	 * @property {Object} settings.posting.earn_from_quick_reply.amounts.boards Can override amounts per board.
 	 * @property {Object} settings.notification Settings for notifications that users get when their money is edited.
@@ -145,6 +146,7 @@ var money = {
 				per_poll: 5,
 				per_reply: 5,
 				per_quick_reply: 5,
+				per_mobile_post: 2,
 
 				categories: {},
 				boards: {}
@@ -788,6 +790,9 @@ var money = {
 		if(this.is_new_thread){
 			money_to_add += parseFloat(this.format(this.settings.posting.amounts.per_thread));
 		}
+		
+		unearned_posts = this.data(yootil.user.id()).increase.post_count(true);
+		money_to_add += unearned_posts * parseFloat(this.format(this.settings.posting.amounts.per_mobile_post));
 
 		if(!this.processed){
 			this.processed = true;
@@ -878,6 +883,7 @@ var money = {
 			this.settings.posting.amounts.per_poll = this.format(settings.money_per_poll);
 			this.settings.posting.amounts.per_reply = this.format(settings.money_per_reply);
 			this.settings.posting.amounts.per_quick_reply = this.format(settings.money_per_quick_reply);
+			this.settings.posting.amounts.per_mobile_post = this.format(settings.money_per_mobile_post);
 
 			if(settings.categories_earn_amounts && settings.categories_earn_amounts.length){
 				for(var c = 0, cl = settings.categories_earn_amounts.length; c < cl; c ++){

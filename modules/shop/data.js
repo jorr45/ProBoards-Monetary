@@ -27,7 +27,7 @@ monetary.shop.Data = (function(){
 		 * @property {Array} data.g Gift codes the user has claimed (auto pruned).
 		 * @property {Array} data.t Trade gifts and requests.
 		 */
-
+		
 		this.data = data_obj || {
 
 			// Items
@@ -43,8 +43,59 @@ monetary.shop.Data = (function(){
 			t: []
 
 		};
+		
+		// Compress the object
+		this.compressItems = function(items) {
+		  const buffer = new ArrayBuffer(Object.keys(items).length * 3);
+		  const view = new DataView(buffer);
+		  let offset = 0;
 
-		this.data.i = (typeof this.data.i == "object" && this.data.i.constructor == Object)? this.data.i : {};
+		  for (const id in items) {
+			if (items.hasOwnProperty(id)) {
+			  const item = items[id];
+			  view.setUint16(offset, id); // Use numeric ID as the key
+			  view.setUint8(offset + 2, item.q);
+			  offset += 3;
+			}
+		  }
+
+		  // Convert the buffer to a Base64 string
+		  const base64String = btoa(String.fromCharCode.apply(null, new Uint8Array(buffer)));
+		  return base64String;
+		}
+
+		// Unpack the compressed object and set p to 0
+		this.unpackItems = function (base64String) {
+		  const binaryString = atob(base64String);
+		  const buffer = new ArrayBuffer(binaryString.length);
+		  const view = new DataView(buffer);
+
+		  for (let i = 0; i < binaryString.length; i++) {
+			view.setUint8(i, binaryString.charCodeAt(i));
+		  }
+
+		  const unpackedItems = {};
+
+		  for (let offset = 0; offset < buffer.byteLength; offset += 3) {
+			const id = view.getUint16(offset);
+			const q = view.getUint8(offset + 2);
+			unpackedItems[id] = { p: 0, q }; // Remove "id" field
+		  }
+
+		  return unpackedItems;
+		}
+		
+		console.log(user_id);
+		console.log(this.data.i);
+		if (typeof this.data.i == "string"){
+			this.data.i = this.unpackItems(this.data.i);
+		}
+		else if (typeof this.data.i == "object" && this.data.i.constructor == Object){
+				
+		}
+		else{
+				this.data.i = {};
+		}
 		this.data.g = (typeof this.data.g == "object" && this.data.g.constructor == Array)? this.data.g : [];
 		this.data.t = (typeof this.data.t == "object" && this.data.t.constructor == Array)? this.data.t : [];
 
@@ -59,7 +110,7 @@ monetary.shop.Data = (function(){
 		this.update = function(skip_update, callbacks){
 			if(!skip_update){
 				if(!yootil.key.has_space(monetary.shop.KEY)){
-					this.error = "Data length has gone over it's limit of " + yootil.forum.plugin_max_key_length();
+					this.error = "Data length has gone over its limit of " + yootil.forum.plugin_max_key_length();
 
 					pb.window.dialog("data_limit", {
 
@@ -83,8 +134,12 @@ monetary.shop.Data = (function(){
 
 					return;
 				}
+				var tmp = this.data.i;
+				this.data.i = this.compressItems(this.data.i);
 
 				yootil.key.set(monetary.shop.KEY, this.data, this.user_id, callbacks);
+				this.data.i = tmp;
+
 			}
 		};
 
@@ -93,6 +148,7 @@ monetary.shop.Data = (function(){
 		this.fixed = function(val){
 			return parseFloat(parseFloat(val).toFixed(2));		
 		};
+		
 
 		/**
 		 * @class monetary.shop.Data.get
